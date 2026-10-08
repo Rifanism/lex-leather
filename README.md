@@ -1,59 +1,117 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Lex Leather
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Toko online tas & dompet kulit. Laravel 12 + Breeze (Blade/Alpine) + Tailwind 3 + SQLite.
 
-## About Laravel
+Dua peran: **admin** (kelola produk & kategori, ubah status pesanan) dan **customer** (jelajahi katalog, keranjang, checkout, riwayat pesanan). Admin **tidak punya jalur belanja** — semua rute storefront membalas 403 untuknya.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Menjalankan
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+composer setup     # install + .env + key + migrate + npm build
+composer dev       # serve + queue:listen + pail + vite
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+`composer setup` menjalankan `migrate --seed`. Jika skema berubah, gunakan `php artisan migrate:fresh --seed` — `database/database.sqlite` ikut dibangun ulang.
 
-## Learning Laravel
+Akun demo (semua password `password`):
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+| Peran | Email |
+| --- | --- |
+| Admin | `admin@gmail.com` |
+| Customer | `customer@gmail.com` |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Foto produk diunggah ke disk `public` dan disajikan lewat symlink `public/storage`, jadi `php artisan storage:link` wajib dijalankan.
 
-## Laravel Sponsors
+`--seed` mengisi 2 pengguna, satu baris `payment_settings`, dan 9 produk demo di 3 kategori (`DemoCatalogSeeder`) supaya storefront bisa langsung dinilai.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+php artisan test              # 168 test
+vendor/bin/pint               # format
+```
 
-### Premium Partners
+## Alur utama
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```
+Katalog → Keranjang (session) → Checkout → Pesanan dibuat (stok dipesan)
+                                            → Bayar (simulasi) / ubah status oleh admin
+```
 
-## Contributing
+- **Keranjang** disimpan di session sebagai `[product_id => qty]`. Tidak ada tabel `carts`. Nama, harga, dan stok selalu dibaca ulang dari database, jadi keranjang tidak bisa menampilkan data basi.
+- **Checkout** berjalan dalam satu transaksi: baris produk dikunci `lockForUpdate()`, harga/nama/alamat di-*snapshot* ke `orders` dan `order_items`, `total_amount` dihitung dari harga saat itu, lalu stok langsung dikurangi.
+- **Stok dipesan saat pesanan dibuat**, bukan saat dibayar — mencegah dua pelanggan memperebutkan unit terakhir. Stok hanya kembali saat admin mengubah status menjadi `cancelled`, dan hanya pada transisi masuk ke status tersebut.
+- **Pembayaran adalah simulasi.** Tidak ada payment gateway. Pelanggan menekan tombol "Simulasikan Pembayaran" yang mengubah `pending` → `paid`; klik ganda tidak menghasilkan error. Nomor rekening/e-wallet dan kode QRIS disimpan admin di `payment_settings` (satu baris) dan ditampilkan saat checkout.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Peta kode
 
-## Code of Conduct
+| Path | Isi |
+| --- | --- |
+| `app/Models/` | `Product`, `Category`, `Order`, `OrderItem`, `PaymentSetting` |
+| `app/Support/Cart.php` | Pembungkus keranjang session |
+| `app/Http/Controllers/` | `ProductController`, `CartController`, `CheckoutController`, `OrderController` |
+| `app/Http/Controllers/Admin/` | CRUD produk/kategori, ubah status pesanan, pengaturan pembayaran |
+| `app/Http/Middleware/EnsureUserIsAdmin.php` | Alias `admin`, didaftarkan di `bootstrap/app.php` |
+| `app/Http/Middleware/EnsureUserIsCustomer.php` | Alias `customer` — memblokir admin dari rute storefront |
+| `resources/views/layouts/app.blade.php` | Satu-satunya shell HTML untuk seluruh aplikasi |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Frontend
 
-## Security Vulnerabilities
+Satu layout untuk semua halaman. `<x-app-layout>` punya dua varian:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```blade
+<x-app-layout title="Katalog">...</x-app-layout>            {{-- nav + footer + grain --}}
+<x-app-layout variant="centered" title="Masuk">...</x-app-layout>  {{-- kartu polos, tanpa nav --}}
+```
 
-## License
+Varian `centered` dipakai layar auth (login, register, dsb.) — kartu polos tanpa nav. Halaman profil memakai varian default, dan hanya untuk customer (admin 403 — lihat bagian batas di bawah). `layouts/store-layout`, `layouts/guest`, dan `components/application-logo` sudah dihapus — navigasi Breeze mengasumsikan pengguna sudah login, dan itu tidak berlaku di mana pun lagi.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Tombol kembali
+
+`components/back.blade.php` merender tombol **Kembali** di setiap halaman (kedua varian layout), dari `layouts/app.blade.php`. Bentuknya `<button>` + `history.back()`, bukan `<a href>` — link menambah entri history, sehingga tombol back browser justru balik ke halaman yang baru saja ditinggalkan (membatalkan tombol kembali). `history.back()` hanya memindahkan indeks, jadi back browser setelahnya meneruskan ke halaman sebelumnya, tidak pernah mengundo.
+
+Tombol hanya muncul kalau request membawa `Referer` same-origin, artinya memang ada halaman sebelumnya di tab itu. Halaman yang dibuka langsung di tab baru tidak menampilkannya — tombol yang tidak bisa melakukan apa-apa lebih buruk daripada tidak ada.
+
+### Batas admin ↔ customer
+
+Admin diperlakukan sebagai **pengelola toko, bukan pembeli**:
+
+| | Customer / tamu | Admin |
+| --- | --- | --- |
+| `/`, `/products`, `/products/{slug}` | 200 | **403** |
+| `/cart`, `/checkout`, `/orders` | 200 (login dulu) | **403** |
+| `/dashboard` | tampil | redirect ke `/admin` |
+| `/profile` | 200 | **403** |
+| `/admin/*`, `/admin/settings/account` | 403 | 200 |
+
+Ini diblokir di **route**, bukan cuma link-nya disembunyikan: middleware `customer` (`EnsureUserIsCustomer`) membungkus rute storefront **dan** rute profil. Nav, drawer, dan footer secara bersamaan menyembunyikan Katalog / Keranjang / Pesanan Saya untuk admin, dan link "Lihat di katalog" di layar admin dihapus — tautan yang tidak bisa diikuti pengguna halaman itu tetap bug. Logo juga mengarah ke `/admin` untuk admin, supaya menekan logo bukan jebakan 403.
+
+**Akun admin ada di `/admin/settings/account`**, bukan di `/profile`: nama, email, ganti password (memakai rute `password.update` Breeze apa adanya). Tidak ada nomor HP / alamat (keduanya hanya prefill checkout) dan **tidak ada hapus akun** — aplikasi ini menanam tepat satu admin, `role` tidak di-`fillable`, dan tidak ada UI pembuat admin, jadi menghapus akun sendiri akan mengunci toko dari pengelola.
+
+`AdminBoundaryTest` mengunci semua ini.
+
+**Token** (`tailwind.config.js`): `parchment` (netral hangat, dasar), `espresso` (cokelat tua, teks & tombol), `cognac` (aksen jenuh), plus semantik `success`/`warning`/`danger`/`info`. Palet bawaan Tailwind sengaja dibiarkan utuh, tapi **tidak boleh dipakai** — `PolishTest` gagal kalau ada utilitas `gray-*`/`stone-*`/`indigo-*`/dsb. yang muncul di view.
+
+**Primitif** (`resources/css/app.css`, `@layer components`): `.btn` (+ varian & `.btn-sm`/`.btn-lg`), `.field .label .help`, `.card .card-hover .card-media`, `.badge-{accent,success,warning,danger,info,neutral}`, `.table-wrap .table`, `.page-container`, `.eyebrow`, `.section-title`, `.grain-overlay`, `.stitch-frame`, `.nav-underline`, `.break-anywhere`, `.fade-rise`.
+
+> **Jebakan Tailwind v3 — primitif tidak terkompil sampai dipakai.** Output `@layer components` di-*purge* sampai ada yang mereferensikannya. Primitif yang ditulis tapi tak terpakai lenyap diam-diam, `grain-breathe` pernah begitu). Sebaliknya, `@apply` yang salah di `@layer components` **tidak** menggagalkan `npm run build` sampai kelas itu dipakai — `border-espresso-200` lolos build lalu baru error saat dirender. Verifikasi dengan `grep` di `public/build/assets/app-*.css` setelah menambah primitif.
+
+**Komponen**: `x-icon` (25 SVG tulis tangan, tanpa dependensi), `x-select`, `x-textarea`, `x-checkbox`, `x-order-status`, plus komponen Breeze yang ditulis ulang di atas primitif (`text-input`, `input-label`, `input-error`, `primary-button`, `dropdown`, `modal`, …).
+
+> Nama kelas **harus utuh** — `badge-{{ $tone }}` tidak akan pernah dikompilasi. Tailwind tidak bisa melihat nama yang di-interpolasi. `x-icon` dan `x-order-status` memakai lengan `match` karena itu.
+
+**Label dari model, bukan dari view.** `Order::statusLabels()`, `Order::paymentMethodLabels()`, dan `Product::materialLabels()` adalah satu-satunya sumber label. View memanggilnya; tidak menyalin sendiri.
+
+**Halaman**: `/` landing (hero, strip kategori, 4 produk terbaru, trust bar), `/products` katalog dengan sidebar filter + chip filter yang membawa filter lain ikut, `/products/{slug}` dengan panel beli sticky, `/cart` dengan stepper `+`/`−` yang submit PATCH yang sama, `/checkout` 3 langkah bernomor, `/orders` dengan timeline 4 tahap, dan panel admin dengan stat card + tabel sticky.
+
+**Ikon & font**: tidak ada dependensi baru. Fraunces (display) + Figtree (body) dimuat dari `fonts.bunny.net`; tanpa JS, halaman tetap utuh secara tipografi.
+
+## Catatan implementasi
+
+- `role` **tidak** ada di `User::$fillable` dan tidak pernah divalidasi dari request, sehingga pelanggan tidak bisa menaikkan dirinya sendiri lewat `PATCH /profile`. Ada test yang mengunci hal ini.
+- Setiap kolom yang kosong divalidasi sebagai `required`, jadi submit kosong menghasilkan 422 dengan pesan, bukan 500. `tests/Feature/CheckoutTest.php` mengunci tiap field.
+- `orders.status` tidak pernah diubah nilainya. Menambah status baru butuh rebuild tabel di SQLite.
+- Produk yang pernah dipesan tidak dihapus (foreign key `order_items.product_id` restrictive) — dinonaktifkan lewat `is_active = false`. Kategori yang masih memiliki produk juga tidak bisa dihapus.
+- Harga dan total berupa `integer` rupiah penuh, tanpa pecahan.
+- `products.category_id` juga restrictive. Tombol hapus pada kategori yang masih punya produk di-*disable* di UI, bukan menunggu 500 — `AdminUiTest` mengunci itu.
+- Navigasi lama `hidden sm:flex` tanpa hamburger membuat pengguna ponsel tidak punya jalan ke Katalog/Pesanan/Admin. Sekarang ada drawer Alpine, dan `LayoutShellTest` mengunci link-nya.
+- `delete` tidak pernah memakai `onsubmit="return confirm(...)"` — dialog native tidak bisa di-style. Diganti modal Alpine.
+- Tidak ada API. Jika dibutuhkan, tambahkan `api:` pada `withRouting()` di `bootstrap/app.php`.

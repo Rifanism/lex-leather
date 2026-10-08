@@ -42,11 +42,21 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        // orders.user_id is a restrictive FK (no onDelete), so $user->delete()
+        // would otherwise explode with a QueryException — a 500. Orders are
+        // snapshots of real purchases, so they stay and the account stays.
+        if ($user->orders()->exists()) {
+            return redirect()->back()->withErrors(
+                ['has_orders' => 'Akun tidak bisa dihapus karena masih punya riwayat pesanan.'],
+                'userDeletion',
+            );
+        }
+
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],
         ]);
-
-        $user = $request->user();
 
         Auth::logout();
 

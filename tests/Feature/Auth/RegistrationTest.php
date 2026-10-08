@@ -23,9 +23,25 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'phone' => '08123456789',
+            'address' => 'Jl. Merdeka No. 1, Jakarta',
         ]);
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_registration_requires_phone_and_address(): void
+    {
+        $response = $this->post('/register', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        // Empty phone/address must be a validation error, never a 500.
+        $response->assertSessionHasErrors(['phone', 'address']);
+        $this->assertGuest();
     }
 }

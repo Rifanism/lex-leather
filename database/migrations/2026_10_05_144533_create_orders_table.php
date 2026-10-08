@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->string('order_number');
+            $table->string('order_number')->unique();
             $table->foreignId('user_id')->constrained();
             $table->string('customer_name');
             $table->string('customer_email');
@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('shipping_address');
             $table->integer('total_amount');
             $table->enum('status', ['pending', 'paid', 'shipped', 'completed', 'cancelled']);
-            $table->string('payment_proof')->nullable();
+            $table->enum('payment_method', ['cod', 'bank_transfer', 'ewallet', 'qris'])->default('cod');
             $table->string('note')->nullable();
             $table->timestamps();
         });

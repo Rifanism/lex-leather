@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Foto produk belum tersedia">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F5EFE4"/>
+      <stop offset="1" stop-color="#E9DFCD"/>
+    </linearGradient>
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="0.05"/></feComponentTransfer>
+    </filter>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <rect width="800" height="600" filter="url(#grain)" opacity="0.55"/>
+
+  <g fill="none" stroke="#D9CBB2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M340 300h120l-8 90H348z"/>
+    <path d="M368 300v-22a32 32 0 0 1 64 0v22"/>
+  </g>
+
+  <text x="400" y="432" text-anchor="middle" font-family="Georgia, serif" font-size="20" fill="#8E5A38" letter-spacing="3">
+    LEX LEATHER
+  </text>
+</svg>

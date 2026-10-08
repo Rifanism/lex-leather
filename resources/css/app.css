@@ -1,3 +1,238 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ------------------------------------------------------------------ base */
+
+@layer base {
+    /* Alpine hides nothing until it boots; without this every x-show dropdown
+       and drawer flashes open on first paint. */
+    [x-cloak] {
+        display: none !important;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Respect the OS setting — a boutique landing page should not animate for
+       someone who asked it not to. */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+/* ------------------------------------------------------------ components */
+
+@layer components {
+    /* Buttons ---------------------------------------------------------- */
+
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold
+               transition duration-200 focus-visible:outline-none focus-visible:ring-2
+               focus-visible:ring-cognac-500 focus-visible:ring-offset-2 focus-visible:ring-offset-parchment-50
+               active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+    }
+
+    .btn-primary {
+        @apply bg-espresso-800 text-parchment-100 hover:bg-espresso-900;
+    }
+
+    .btn-accent {
+        @apply bg-cognac-500 text-white hover:bg-cognac-600;
+    }
+
+    .btn-outline {
+        @apply border border-parchment-300 bg-white text-espresso-800 hover:border-cognac-300 hover:bg-parchment-100;
+    }
+
+    .btn-ghost {
+        @apply text-espresso-600 hover:bg-parchment-100 hover:text-espresso-900;
+    }
+
+    .btn-danger {
+        @apply bg-danger-600 text-white hover:bg-danger-700;
+    }
+
+    .btn-sm {
+        @apply px-3.5 py-1.5 text-xs;
+    }
+
+    .btn-lg {
+        @apply px-7 py-3.5 text-base;
+    }
+
+    /* Form fields ------------------------------------------------------ */
+
+    .field {
+        @apply w-full rounded-xl border border-parchment-200 bg-white px-3.5 py-2.5 text-sm text-espresso-900
+               shadow-sm transition placeholder:text-espresso-800/40
+               focus:border-cognac-400 focus:outline-none focus:ring-2 focus:ring-cognac-200
+               disabled:bg-parchment-100 disabled:text-espresso-800/50;
+    }
+
+    .label {
+        @apply block text-sm font-medium text-espresso-700;
+    }
+
+    .help {
+        @apply text-xs text-espresso-800/55;
+    }
+
+    .field-error {
+        @apply text-sm text-danger-600;
+    }
+
+    /* Surfaces --------------------------------------------------------- */
+
+    .card {
+        @apply rounded-2xl border border-parchment-200 bg-white shadow-card;
+    }
+
+    .card-hover {
+        @apply transition duration-300 hover:-translate-y-1 hover:border-cognac-200 hover:shadow-card-hover;
+    }
+
+    .card-media {
+        @apply overflow-hidden bg-parchment-100;
+    }
+
+    /* Badges ----------------------------------------------------------- */
+
+    .badge {
+        @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium;
+    }
+
+    .badge-accent {
+        @apply bg-cognac-50 text-cognac-700;
+    }
+
+    .badge-success {
+        @apply bg-success-50 text-success-700;
+    }
+
+    .badge-warning {
+        @apply bg-warning-50 text-warning-700;
+    }
+
+    .badge-danger {
+        @apply bg-danger-50 text-danger-700;
+    }
+
+    .badge-info {
+        @apply bg-info-50 text-info-700;
+    }
+
+    .badge-neutral {
+        @apply bg-parchment-100 text-espresso-600;
+    }
+
+    /* Tables ----------------------------------------------------------- */
+
+    .table-wrap {
+        @apply overflow-x-auto rounded-2xl border border-parchment-200 bg-white shadow-card;
+    }
+
+    .table {
+        @apply w-full text-sm;
+    }
+
+    .table thead th {
+        @apply whitespace-nowrap border-b border-parchment-200 bg-parchment-100/70 px-5 py-3 text-start
+               text-xs font-semibold uppercase tracking-wider text-espresso-600/70;
+    }
+
+    .table tbody td {
+        @apply border-b border-parchment-100 px-5 py-3.5 align-middle text-espresso-700;
+    }
+
+    .table tbody tr {
+        @apply transition-colors hover:bg-parchment-50;
+    }
+
+    .table tbody tr:last-child td {
+        @apply border-b-0;
+    }
+
+    /* Layout ----------------------------------------------------------- */
+
+    .page-container {
+        @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+    }
+
+    .eyebrow {
+        @apply text-xs font-semibold uppercase tracking-[0.18em] text-cognac-600;
+    }
+
+    .section-title {
+        @apply font-display text-3xl font-semibold tracking-tight text-espresso-900;
+    }
+
+    /* Leather grain. A fixed, click-through overlay of fractal noise — reads as
+       material rather than pattern. The 260px tile is deliberately larger than
+       the 180px first draft: at 180 the repeat became visible as a grid once a
+       page was taller than the viewport. Opacity dropped to 3.5% to match the
+       coarser noise. Kept below the sticky nav's z-40 and the modal's z-50. */
+    .grain-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        pointer-events: none;
+        opacity: 0.035;
+        mix-blend-mode: multiply;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* Leather stitching. Used sparingly on hero and feature frames. */
+    .stitch-frame {
+        @apply rounded-3xl border border-dashed border-parchment-300;
+    }
+
+    /* Nav underline that grows from the left on hover, and stays put on the
+       current page. Driven by `aria-current` rather than a second class so the
+       active link is announced to screen readers too. */
+    .nav-underline {
+        @apply relative;
+    }
+
+    .nav-underline::after {
+        content: '';
+        @apply absolute inset-x-0 -bottom-1 h-0.5 origin-left scale-x-0 bg-cognac-500
+               transition-transform duration-200;
+    }
+
+    .nav-underline:hover::after,
+    .nav-underline:focus-visible::after,
+    .nav-underline[aria-current='page']::after {
+        @apply scale-x-100;
+    }
+
+    /* Long order numbers, emails and addresses must not push a card wider than
+       the viewport. Applied where user-supplied text meets a flex row. */
+    .break-anywhere {
+        overflow-wrap: anywhere;
+    }
+
+    /* Entry animation for page content. */
+    .fade-rise {
+        animation: fade-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+}
+
+@keyframes fade-rise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
