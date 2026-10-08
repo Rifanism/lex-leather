@@ -13,18 +13,17 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        User::factory()->create([
+        // firstOrCreate so `db:seed` is safe to run on every container boot.
+        User::firstOrCreate(['email' => 'admin@gmail.com'], [
             'name' => 'Admin',
-            'email' => 'admin@gmail.com',
             'password' => 'password',
             'phone' => '081200000001',
             'address' => 'Jl. Pelaku Kulit No. 1, Bandung',
             'role' => 'admin',
         ]);
 
-        User::factory()->create([
+        User::firstOrCreate(['email' => 'customer@gmail.com'], [
             'name' => 'Rifan Habibi',
-            'email' => 'customer@gmail.com',
             'password' => 'password',
             'phone' => '081200000002',
             'address' => 'Jl. Merdeka No. 10, Jakarta',
