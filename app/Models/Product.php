@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -113,11 +114,11 @@ class Product extends Model
         return 'slug';
     }
 
-    /** Public URL for the uploaded photo, served through the storage symlink. */
+    /** Public URL for the uploaded photo; disk('public') follows FILESYSTEM_PUBLIC_DRIVER. */
     public function imageUrl(): string
     {
         return $this->hasImage()
-            ? asset('storage/'.$this->image)
+            ? Storage::disk('public')->url($this->image)
             : asset('images/product-placeholder.svg');
     }
 

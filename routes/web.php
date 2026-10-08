@@ -11,6 +11,28 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+
+// Stored uploads. On Vercel the public disk writes to the media table
+// (FILESYSTEM_PUBLIC_DRIVER=db); this is the public reader, so it stays
+// outside every auth group — admins view the same images as guests.
+Route::get('/media/{path}', function (string $path) {
+    try {
+        $disk = Storage::disk('public');
+
+        if (str_contains($path, '..') || ! $disk->exists($path)) {
+            abort(404);
+        }
+
+        return response($disk->get($path), 200, [
+            'Content-Type' => $disk->mimeType($path),
+            // store() names files with a content hash, so the URL is immutable.
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
+    } catch (Throwable) {
+        abort(404);
+    }
+})->where('path', '.*');
 
 // The storefront is a customer surface: an admin manages the shop from /admin
 // and gets a 403 here, so these links are never rendered for them at all.

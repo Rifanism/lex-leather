@@ -1,0 +1,12 @@
+.env
+.env.*
+node_modules
+.vercel
+storage/logs
+storage/app
+database/database.sqlite
+tests
+docker
+Dockerfile
+.dockerignore
+*.md

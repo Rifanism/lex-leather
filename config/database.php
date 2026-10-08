@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Str;
 use Pdo\Mysql;
+use Pdo\Pgsql;
 
 return [
 
@@ -97,6 +98,14 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // PHP 8.5.2's pdo_pgsql aborts the server-side transaction when a
+            // named prepared statement is destroyed mid-request (swallowed
+            // error → 25P02 on the next statement, or a silent ROLLBACK on
+            // COMMIT). Fixed upstream by 8.5.10; vercel-php pins 8.5.2, so
+            // skip named prepares entirely — one round-trip instead of two.
+            'options' => defined('Pdo\\Pgsql::ATTR_DISABLE_PREPARES')
+                ? [Pgsql::ATTR_DISABLE_PREPARES => true]
+                : [],
         ],
 
         'sqlsrv' => [

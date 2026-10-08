@@ -13,6 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Vercel's edge proxies the PHP function: without trusting it,
+        // isSecure() is false, so the session cookie ships without the
+        // Secure flag and back()-redirects fall back to http://.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'customer' => EnsureUserIsCustomer::class,

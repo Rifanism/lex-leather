@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Singleton row holding the account numbers shown at checkout.
@@ -65,6 +66,7 @@ class PaymentSetting extends Model
 
     public function qrisImageUrl(): ?string
     {
-        return $this->qris_image ? asset('storage/'.$this->qris_image) : null;
+        // disk('public') so the URL follows FILESYSTEM_PUBLIC_DRIVER (R2 on Vercel).
+        return $this->qris_image ? Storage::disk('public')->url($this->qris_image) : null;
     }
 }
