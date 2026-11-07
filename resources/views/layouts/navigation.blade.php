@@ -17,7 +17,7 @@
                         <x-icon name="bag" />
                     </span>
                     <span class="font-display text-lg font-semibold tracking-tight text-espresso-900">
-                        {{ config('app.name') }}
+                        Lex Leather
                     </span>
                 </a>
 

@@ -8,7 +8,7 @@
                     <x-icon name="bag" />
                 </span>
                 <span class="font-display text-lg font-semibold tracking-tight text-espresso-900">
-                    {{ config('app.name') }}
+                    Lex Leather
                 </span>
             </div>
             <p class="mt-4 max-w-xs text-sm leading-relaxed text-espresso-800/60">
@@ -67,7 +67,7 @@
 
     <div class="border-t border-parchment-200">
         <div class="page-container flex flex-col gap-2 py-5 text-xs text-espresso-800/50 sm:flex-row sm:items-center sm:justify-between">
-            <p>&copy; {{ now()->year }} {{ config('app.name') }}. Course project.</p>
+            <p>&copy; {{ now()->year }} Lex Leather. Course project.</p>
             <p>Harga dalam rupiah, belum termasuk ongkir.</p>
         </div>
     </div>

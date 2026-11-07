@@ -18,7 +18,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="theme-color" content="#FBF8F3">
 
-        <title>{{ $title }}</title>
+        <title>Lex Leather</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&family=fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
@@ -43,7 +43,7 @@
                         <x-icon name="bag" class="size-7" />
                     </span>
                     <span class="font-display text-xl font-semibold tracking-tight text-espresso-900">
-                        {{ config('app.name') }}
+                        Lex Leather
                     </span>
                 </a>
 
@@ -55,7 +55,7 @@
                 </div>
 
                 <p class="mt-8 text-xs text-espresso-800/50">
-                    &copy; {{ now()->year }} {{ config('app.name') }}
+                    &copy; {{ now()->year }} Lex Leather
                 </p>
             </div>
         @else
